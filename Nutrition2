@@ -1,0 +1,97 @@
+# Import modules
+import requests
+import json
+import random
+
+# Define constants
+API_KEY = "your_api_key" # Get your API key from https://spoonacular.com/food-api
+BASE_URL = "https://api.spoonacular.com/"
+PRICE_PER_PLAN = 9.99 # Set your price per plan in USD
+
+# Define functions
+def get_nutrition_plan(calories, diet, exclude):
+    """Get a nutrition plan from the API based on the user's preferences."""
+    # Build the query parameters
+    params = {
+        "apiKey": API_KEY,
+        "targetCalories": calories,
+        "diet": diet,
+        "exclude": exclude
+    }
+    # Make the request to the API
+    response = requests.get(BASE_URL + "mealplanner/generate", params=params)
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Parse the response as JSON
+        data = response.json()
+        # Return the nutrition plan
+        return data["week"]
+    else:
+        # Return None if the request failed
+        return None
+
+def display_nutrition_plan(plan):
+    """Display a nutrition plan in a user-friendly way."""
+    # Loop through the days of the week
+    for day in plan:
+        # Print the day number
+        print(f"Day {day['day']}:")
+        # Loop through the meals of the day
+        for meal in day["meals"]:
+            # Print the meal type and title
+            print(f"- {meal['type'].title()}: {meal['title']}")
+            # Print the calories, carbs, fat and protein
+            print(f"  Calories: {meal['nutrition']['calories']} kcal")
+            print(f"  Carbs: {meal['nutrition']['carbohydrates']} g")
+            print(f"  Fat: {meal['nutrition']['fat']} g")
+            print(f"  Protein: {meal['nutrition']['protein']} g")
+        # Print a blank line for spacing
+        print()
+
+def generate_invoice(user, plan):
+    """Generate an invoice for the user based on the plan."""
+    # Get the total number of days in the plan
+    days = len(plan)
+    # Calculate the total amount to charge
+    amount = days * PRICE_PER_PLAN
+    # Generate a random invoice number
+    invoice_number = random.randint(1000, 9999)
+    # Print the invoice header
+    print(f"Invoice #{invoice_number}")
+    print(f"User: {user}")
+    print(f"Plan: {days}-day nutrition plan")
+    print(f"Amount: ${amount:.2f}")
+    print()
+    print("Thank you for choosing our nutrition platform!")
+    
+# Define main function
+def main():
+    """Run the main program."""
+    # Ask the user for their name
+    user = input("What is your name? ")
+    # Ask the user for their target calories per day
+    calories = int(input("How many calories do you want to consume per day? "))
+    # Ask the user for their diet preference
+    diet = input("Do you have any diet preference? (e.g. vegetarian, vegan, gluten free, etc.) ")
+    # Ask the user for any foods to exclude
+    exclude = input("Do you want to exclude any foods? (e.g. nuts, dairy, eggs, etc.) ")
+    
+    # Get a nutrition plan from the API based on the user's preferences
+    plan = get_nutrition_plan(calories, diet, exclude)
+    
+    # Check if the plan is valid
+    if plan:
+        # Display the nutrition plan to the user
+        display_nutrition_plan(plan)
+        # Ask the user if they want to purchase the plan
+        purchase = input("Do you want to purchase this plan? (y/n) ")
+        # Check if the user wants to purchase the plan
+        if purchase.lower() == "y":
+            # Generate an invoice for the user based on the plan
+            generate_invoice(user, plan)
+        else:
+            # Thank the user for trying out the platform
+            print("Thank you for trying out our nutrition platform!")
+            
+# Call main function            
+main()
